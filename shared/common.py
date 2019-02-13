@@ -4,12 +4,10 @@ import json
 import os
 import datetime
 import pyjq
-from collections import OrderedDict
-import yaml
 import sys
 import urllib.parse
-from netaddr import IPNetwork
 
+from netaddr import IPNetwork
 from shared.nodes import Account, Region
 
 
@@ -106,11 +104,23 @@ def query_aws(account, query, region=None):
         return {}
 
 
-def get_parameter_file(region, service, function, parameter_value):
+def slurp_parameter_files(region, location):
+    dir_name = 'account-data/{}/{}/{}'.format(
+        region.account.name,
+        region.name,
+        location)
+    if not os.path.isdir(dir_name):
+        return None
+    return [json.load(open(f_path))
+        for f_path in [os.path.join(dir_name, f) for f in os.listdir(dir_name)]
+        if os.path.isfile(f_path) and os.path.getsize(f_path) > 4]
+
+
+def get_parameter_file(region, service, command, parameter_value):
     file_name = 'account-data/{}/{}/{}/{}'.format(
         region.account.name,
         region.name,
-        '{}-{}'.format(service, function),
+        '{}-{}'.format(service, command),
         urllib.parse.quote_plus(parameter_value))
     if not os.path.isfile(file_name):
         return None
@@ -182,37 +192,6 @@ def parse_arguments(arguments, parser=None):
         accounts.append(get_account(account_name, config, args.config))
 
     return (args, accounts, config)
-
-
-def get_account_stats(account):
-    """Returns stats for an account"""
-
-    with open("stats_config.yaml", 'r') as f:
-        resources = yaml.safe_load(f)
-
-    account = Account(None, account)
-    log_debug('Collecting stats in account {} ({})'.format(account.name, account.local_id))
-
-    stats = {}
-    stats['keys'] = []
-    for resource in resources:
-        stats['keys'].append(resource['name'])
-        stats[resource['name']] = {}
-
-
-    for region_json in get_regions(account):
-        region = Region(account, region_json)
-
-        for resource in resources:
-            # Skip global services (just CloudFront)
-            if ('region' in resource) and (resource['region'] != region.name):
-                continue
-
-            # Normal path
-            stats[resource['name']][region.name] = sum(pyjq.all(resource['query'], 
-                query_aws(region.account, resource['source'], region)))
-
-    return stats
 
 
 def get_us_east_1(account):

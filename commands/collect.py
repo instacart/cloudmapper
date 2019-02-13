@@ -31,7 +31,10 @@ def get_identifier_from_parameter(parameter):
 
 def get_filename_from_parameter(parameter):
     if isinstance(parameter, list):
-        filename = parameter[1]
+        if len(parameter) == 0:
+            return None
+        else:
+            filename = parameter[1]
     else:
         filename = parameter
 
@@ -145,7 +148,6 @@ def collect(arguments):
 
     session = boto3.Session(**session_data)
 
-
     sts = session.client('sts')
     try:
         sts.get_caller_identity()
@@ -188,7 +190,7 @@ def collect(arguments):
 
     # Services that will only be queried in the default_
     # TODO: Identify these from boto
-    universal_services = ['sts', 'iam', 'route53', 'route53domains', 's3', 's3control', 'cloudfront']
+    universal_services = ['sts', 'iam', 'route53', 'route53domains', 's3', 's3control', 'cloudfront', 'organizations']
 
     with open("collect_commands.yaml", 'r') as f:
         collect_commands = yaml.safe_load(f)
@@ -224,6 +226,11 @@ def collect(arguments):
                     # Look for any dynamic values (ones that jq parse a file)
                     if '|' in parameter['Value']:
                         dynamic_parameter = parameter['Name']
+                        if "Type" in parameter:
+                            dynamic_parameter_type = parameter["Type"]
+                        else:
+                            dynamic_parameter_type = "string"
+
 
             if dynamic_parameter is not None:
                 # Set up directory for the dynamic value
@@ -249,11 +256,22 @@ def collect(arguments):
                     with open(parameter_file, 'r') as f:
                         parameter_values = json.load(f)
                         pyjq_parse_string = '|'.join(parameters[dynamic_parameter].split('|')[1:])
+                        pyjq_parse_string = pyjq_parse_string.replace("{region}", region["RegionName"])
+                        pyjq_parse_string = pyjq_parse_string.replace("{account}", arguments.account_id)
+
                         for parameter in pyjq.all(pyjq_parse_string, parameter_values):
                             filename = get_filename_from_parameter(parameter)
+
+                            if filename is None:
+                                continue
+
                             identifier = get_identifier_from_parameter(parameter)
                             call_parameters = dict(parameters)
-                            call_parameters[dynamic_parameter] = identifier
+
+                            if dynamic_parameter_type == "list":
+                                call_parameters[dynamic_parameter] = [identifier]
+                            else:
+                                call_parameters[dynamic_parameter] = identifier
 
                             outputfile = "{}/{}".format(
                                 filepath,
@@ -302,13 +320,15 @@ def run(arguments):
 
     args = parser.parse_args(arguments)
 
-    if not args.account_name:
-        try:
-            config = json.load(open(args.config))
-        except IOError:
-            exit("ERROR: Unable to load config file \"{}\"".format(args.config))
-        except ValueError as e:
-            exit("ERROR: Config file \"{}\" could not be loaded ({}), see config.json.demo for an example".format(args.config, e))
-        args.account_name = get_account(args.account_name, config, args.config)['name']
+    try:
+        config = json.load(open(args.config))
+    except IOError:
+        exit("ERROR: Unable to load config file \"{}\"".format(args.config))
+    except ValueError as e:
+        exit("ERROR: Config file \"{}\" could not be loaded ({}), see config.json.demo for an example".format(args.config, e))
+
+    account = get_account(args.account_name, config, args.config)
+    args.account_id = account['id']
+    args.account_name = account['name']
 
     collect(args)

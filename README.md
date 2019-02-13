@@ -173,7 +173,7 @@ python cloudmapper.py collect --account my_account
 - `prepare`/`webserver`: See [Network Visualizations](docs/network_visualizations.md)
 - `public`: Find public hosts and port ranges. More details [here](https://summitroute.com/blog/2018/06/13/cloudmapper_public/).
 - `sg_ips`: Get geoip info on CIDRs trusted in Security Groups. More details [here](https://summitroute.com/blog/2018/06/12/cloudmapper_sg_ips/).
-- `stats`: Show counts of resources for accounts. More details [here](https://summitroute.com/blog/2018/06/06/cloudmapper_stats/).
+- `stats`: Show counts of resources for accounts. More details [here](**https://summitroute.com/blog/2018/06/06/cloudmapper_stats/**).
 - `wot`: Show Web Of Trust. More details [here](https://summitroute.com/blog/2018/06/13/cloudmapper_wot/).
 
 If you want to add your own private commands, you can create a `private_commands` directory and add them there.

@@ -1,17 +1,16 @@
 from __future__ import print_function
-import sys
+
 import argparse
-import json
-import itertools
-import os.path
-import urllib.parse
-from os import listdir
-from collections import OrderedDict
 import pyjq
+import yaml
+
+from collections import Counter
+
 from shared.nodes import Account, Region
-from shared.common import parse_arguments, query_aws, get_regions, log_debug, get_account_stats
+from shared.common import parse_arguments, query_aws, get_regions, log_debug, slurp_parameter_files
 
 __description__ = "Print counts of resources for accounts"
+
 
 def output_image(accounts, account_stats, resource_names, output_image_file):
     # Display graph
@@ -20,7 +19,6 @@ def output_image(accounts, account_stats, resource_names, output_image_file):
     import pandas as pd
     import seaborn as sns
     import matplotlib.pyplot as plt
-    from pandas.plotting import table
 
     # Reverse order of accounts so they appear in the graph correctly
     accounts = list(reversed(accounts))
@@ -53,8 +51,62 @@ def output_image(accounts, account_stats, resource_names, output_image_file):
     fig.savefig(output_image_file, format='png', bbox_inches='tight', dpi=200)
     print('Image saved to {}'.format(output_image_file), file=sys.stderr)
 
+def count_tags(region, resource, tag, aws_data):
+    if 'tags_query' in resource:
+        query = resource['tags_query'].format(tag)
+        if ".json" in resource['tags_source']:
+            aws_data = query_aws(region.account, resource['tags_source'], region)
+        else:
+            aws_data = slurp_parameter_files(region, resource['tags_source'])
+    else:
+        query = resource['query'].replace('|length', '[]|.Tags[]|select(.Key == "{}")|.Value'.format(tag))
 
-def stats(accounts, config, args):
+    tags = pyjq.all(query, aws_data)
+    return Counter(tags)
+
+
+def count_terraformed_resources(region, resource, aws_data):
+    if "no_tags" in resource:
+        return "--"
+    counter = count_tags(region, resource, "Terraform", aws_data)
+    return counter["1"] + counter["true"]
+
+
+def get_account_stats(account):
+    """Returns stats for an account"""
+
+    with open("stats_config.yaml", 'r') as f:
+        resources = yaml.safe_load(f)
+
+    account = Account(None, account)
+    log_debug('Collecting stats in account {} ({})'.format(account.name, account.local_id))
+
+    stats = {}
+    stats['keys'] = []
+    for resource in resources:
+        stats['keys'].append(resource['name'])
+        stats[resource['name']] = {}
+
+    for region_json in get_regions(account):
+        region = Region(account, region_json)
+
+        for resource in resources:
+            # Skip global services (just CloudFront)
+            if ('region' in resource) and (resource['region'] != region.name):
+                continue
+
+            # Normal path
+            aws_data = query_aws(region.account, resource['source'], region)
+
+            stats[resource['name']][region.name] = {
+                "count": sum(pyjq.all(resource['query'], aws_data)),
+                "Terraform": count_terraformed_resources(region, resource, aws_data)
+            }
+
+    return stats
+
+
+def stats(accounts):
     '''Collect stats'''
 
     # Collect counts
@@ -64,17 +116,22 @@ def stats(accounts, config, args):
         resource_names = account_stats[account['name']]['keys']
 
     # Print header
-    print('\t'.rjust(20) + '\t'.join(a['name'] for a in accounts))
+    print('account,resource,count,Terraform')
 
     for resource_name in resource_names:
-        output_line = resource_name.ljust(20)
         for account in accounts:
-            count = sum(account_stats[account['name']][resource_name].values())
-            output_line += ('\t' + str(count)).ljust(8)
-        print(output_line)
+            resource_stats = account_stats[account['name']][resource_name].values()
+            resource_counts = [stat["count"] for stat in resource_stats]
+            resource_total = sum(resource_counts)
 
-    if not args.no_output_image:
-        output_image(accounts, account_stats, resource_names, args.output_image)
+            tf_counts = [stat["Terraform"] for stat in resource_stats]
+            if "--" in tf_counts:
+                tf_total = "--"
+            else:
+                tf_total = sum(tf_counts)
+
+            print("{},{},{},{}".format(account["name"], resource_name, resource_total, tf_total))
+
 
 def run(arguments):
     parser = argparse.ArgumentParser()
@@ -86,4 +143,4 @@ def run(arguments):
 
     args, accounts, config = parse_arguments(arguments, parser)
 
-    stats(accounts, config, args)
+    stats(accounts)

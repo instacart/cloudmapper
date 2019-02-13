@@ -1,52 +1,305 @@
-- name: S3 buckets
-  query: .Buckets|length
-  source: s3-list-buckets
-- name: EC2 instances
-  query: .Reservations[].Instances|length
-  source: ec2-describe-instances
-- name: ELBs
-  query: .LoadBalancerDescriptions|length
-  source: elb-describe-load-balancers
-- name: ELBv2s
-  query: .LoadBalancers|length
-  source: elbv2-describe-load-balancers
-- name: RDS instances
-  query: .DBInstances|length
-  source: rds-describe-db-instances
-- name: Redshift clusters
-  query: .Clusters|length
-  source: redshift-describe-clusters
-- name: ElasticSearch domains
-  query: .DomainNames|length
-  source: es-list-domain-names
-- name: Elasticache clusters
-  query: .CacheClusters|length
-  source: elasticache-describe-cache-clusters
-- name: SNS topics
-  query: .Topics|length
-  source: sns-list-topics
-- name: SQS queues
-  query: .QueueUrls|length
-  source: sqs-list-queues
-- name: CloudFronts
-  query: .DistributionList.Items|length
-  source: cloudfront-list-distributions
-  region: us-east-1
+- name: ACM certificates
+  query: .CertificateSummaryList|length
+  source: acm-list-certificates
+  tags_query: ".[]|.TagList[]?|select(.Key == \"{}\")|.Value"
+  tags_source: acm-list-tags-for-certificate
+
+- name: AMIs
+  query: .Images|length
+  source: ec2-describe-images
+  tags_query: ".[]|.Tags[]?|select(.ResourceType == \"image\")|select(.Key == \"{}\")|.Value"
+  tags_source: ec2-describe-tags
+
+- name: API Gateway APIs
+  query: .items|length
+  source: apigateway-get-rest-apis
+  no_tags: true
+
+- name: Athena saved queries
+  query: .NamedQueryIds|length
+  source: athena-list-named-queries
+  no_tags: true
+
 - name: Autoscaling groups
   query: .AutoScalingGroups|length
   source: autoscaling-describe-auto-scaling-groups
-- name: ElasticBeanstalks
-  query: .Applications|length
-  source: elasticbeanstalk-describe-applications
-- name: Firehose streams
+
+- name: AWS Organization accounts
+  query: .Accounts|length
+  source: organizations-list-accounts
+  no_tags: true
+
+- name: Batch job definitions
+  query: .jobDefinitions|length
+  source: batch-describe-job-definitions
+  no_tags: true
+
+- name: CloudFormation stacks
+  query: .Stacks|length
+  source: cloudformation-describe-stacks
+
+- name: CloudFront distributions
+  query: .DistributionList.Items|length
+  source: cloudfront-list-distributions
+  tags_query: ".[]|.Tags|.Items[]?|select(.Key == \"{}\")|.Value"
+  tags_source: cloudfront-list-tags-for-resource
+
+- name: CloudHSM clusters
+  query: .Clusters|length
+  source: cloudhsmv2-describe-clusters
+  tags_query: ".[]|.TagList[]?|select(.Key == \"{}\")|.Value"
+  tags_source: cloudhsmv2-list-tags
+
+- name: CloudTrail trails
+  query: .trailList|length
+  source: cloudtrail-describe-trails
+  tags_query: ".[]|.ResourceTagList[]?|.TagsList[]?|select(.Key == \"{}\")|.Value"
+  tags_source: cloudtrail-list-tags
+
+- name: CloudWatch alarms
+  query: .MetricAlarms|length
+  source: cloudwatch-describe-alarms
+  no_tags: true
+
+- name: CloudWatch dashboards
+  query: .DashboardEntries|length
+  source: cloudwatch-list-dashboards
+  no_tags: true
+
+- name: CodeBuild projects
+  query: .projects|length
+  source: codebuild-list-projects
+  tags_query: ".[]|.projects[]?|.tags[]?|select(.Key == \"{}\")|.Value"
+  tags_source: codebuild-batch-get-projects
+
+- name: CodeDeploy applications
+  query: .applications|length
+  source: codedeploy-list-applications
+  no_tags: true
+
+- name: Config rules
+  query: .ConfigRules|length
+  source: config-describe-config-rules
+  no_tags: true
+
+- name: Cost usage reports
+  query: .ReportDefinitions|length
+  source: cur-describe-report-definitions
+  no_tags: true
+
+- name: Data pipelines
+  query: .pipelineIdList|length
+  source: datapipeline-list-pipelines
+  tags_query: ".[]|.pipelineDescriptionList[]|.tags[]?|select(.Key == \"{}\").Value"
+  tags_source: datapipeline-describe-pipelines
+
+- name: DMS Tasks
+  query: .ReplicationTasks|length
+  source: dms-describe-replication-tasks
+  tags_query: ".[]|.TagList[]?|select(.Key == \"{}\")|.Value"
+  tags_source: dms-list-tags-for-resource
+
+- name: DynamoDB tables
+  query: .TableNames|length
+  source: dynamodb-list-tables
+
+- name: EBS volumes
+  query: .Volumes|length
+  source: ec2-describe-volumes
+
+- name: EC2 instances
+  query: .Reservations[].Instances|length
+  source: ec2-describe-instances
+
+- name: EC2 key pairs
+  query: .KeyPairs|length
+  source: ec2-describe-key-pairs
+  no_tags: true
+
+- name: EC2 launch configurations
+  query: .LaunchConfigurations|length
+  source: autoscaling-describe-launch-configurations
+  no_tags: true
+
+- name: EC2 launch templates
+  query: .LaunchTemplates|length
+  source: ec2-describe-launch-templates
+
+- name: EC2 reserved instances
+  query: .ReservedInstances|length
+  source: ec2-describe-reserved-instances
+
+- name: EC2 security groups
+  query: .SecurityGroups|length
+  source: ec2-describe-security-groups
+
+- name: ECR repositories
+  query: .repositories|length
+  source: ecr-describe-repositories
+  tags_query: ".[]|.TagList[]?|select(.Key == \"{}\")|.Value"
+  tags_source: ecr-list-tags-for-resource
+
+- name: ECS clusters
+  query: .clusterArns|length
+  source: ecs-describe-clusters
+  tags_query: ".[]|.tags[]?|select(.Key == \"{}\")|.Value"
+  tags_source: ecs-list-tags-for-resource
+
+- name: ECS task definitions
+  query: .taskDefinitionArns|length
+  source: ecs-list-task-definitions
+  no_tags: true
+
+- name: EFS file systems
+  query: .FileSystems|length
+  source: efs-describe-file-systems
+  tags_query: ".[]|.Tags[]?|select(.Key == \"{}\")|.Value"
+  tags_source: efs-describe-tags
+
+- name: Elasticache clusters
+  query: .CacheClusters|length
+  source: elasticache-describe-cache-clusters
+  tags_query: ".[]|.TagList[]?|select(.Key == \"{}\")|.Value"
+  tags_source: elasticache-list-tags-for-resource
+
+- name: ELBs
+  query: .LoadBalancerDescriptions|length
+  source: elb-describe-load-balancers
+  tags_query: ".[]|.TagDescriptions[]?|.Tags[]?|select(.Key == \"{}\")|.Value"
+  tags_source: elb-describe-tags
+
+- name: ELBs v2
+  query: .LoadBalancers|length
+  source: elbv2-describe-load-balancers
+  tags_query: ".[]|.TagDescriptions[]|select(.ResourceArn | contains(\":loadbalancer\"))|.Tags[]|select(.Key == \"{}\")|.Value"
+  tags_source: elbv2-describe-tags
+
+- name: ELB v2 target groups
+  query: .TargetGroups|length
+  source: elbv2-describe-target-groups
+  tags_query: ".[]|.TagDescriptions[]|select(.ResourceArn | contains(\":targetgroup\"))|.Tags[]|select(.Key == \"{}\")|.Value"
+  tags_source: elbv2-describe-tags
+
+- name: EMR clusters
+  query: .Clusters|length
+  source: emr-list-clusters
+  tags_query: ".[]|.Cluster|.Tags[]?|select(.Key == \"{}\")|.Value"
+  tags_source: emr-describe-cluster
+
+- name: Firehose delivery streams
   query: .DeliveryStreamNames|length
   source: firehose-list-delivery-streams
-- name: Glacier vaults
-  query: .VaultList|length
-  source: glacier-list-vaults
+  tags_query: ".[]|.Tags[]?|select(.Key == \"{}\")|.Value"
+  tags_source: firehose-list-tags-for-delivery-stream
+
+- name: Glue databases
+  query: .DatabaseList|length
+  source: glue-get-databases
+  no_tags: true
+
+- name: IAM groups
+  query: .GroupDetailList|length
+  source: iam-get-account-authorization-details
+  no_tags: true
+
+- name: IAM policies
+  query: .Policies|length
+  source: iam-get-account-authorization-details
+  no_tags: true
+
+- name: IAM roles
+  query: .RoleDetailList|length
+  source: iam-get-account-authorization-details
+
+- name: IAM users
+  query: .UserDetailList|length
+  source: iam-get-account-authorization-details
+
+- name: Kinesis streams
+  query: .StreamNames|length
+  source: kinesis-list-streams
+  tags_query: ".[]|.Tags[]?|select(.Key == \"{}\")|.Value"
+  tags_source: kinesis-list-tags-for-stream
+
 - name: KMS keys
   query: .Keys|length
   source: kms-list-keys
+  tags_query: ".[]|.Tags[]?|select(.TagKey == \"{}\")|.TagValue"
+  tags_source: kms-list-resource-tags
+
 - name: Lambda functions
   query: .Functions|length
   source: lambda-list-functions
+  tags_query: ".[]|.Tags[]?|.{}"
+  tags_source: lambda-list-tags
+
+- name: Machine Learning datasources
+  query: .Results|length
+  source: machinelearning-describe-data-sources
+  tags_query: ".[]|select(.ResourceType = \"DataSource\")|.Tags[]|select(.Key == \"{}\")|.Value"
+  tags_source: machinelearning-describe-tags
+
+- name: Machine Learning evaluations
+  query: .Results|length
+  source: machinelearning-describe-evaluations
+  tags_query: ".[]|select(.ResourceType = \"Evaluation\")|.Tags[]|select(.Key == \"{}\")|.Value"
+  tags_source: machinelearning-describe-tags
+
+- name: Machine Learning models
+  query: .Results|length
+  source: machinelearning-describe-ml-models
+  tags_query: ".[]|select(.ResourceType = \"MLModel\")|.Tags[]|select(.Key == \"{}\")|.Value"
+  tags_source: machinelearning-describe-tags
+
+- name: RDS instances
+  query: .DBInstances|length
+  source: rds-describe-db-instances
+  tags_query: ".[]|.TagList[]?|select(.Key == \"{}\")|.Value"
+  tags_source: rds-list-tags-for-resource
+
+- name: Route53 domains
+  query: .Domains|length
+  source: route53domains-list-domains
+  tags_query: ".[]|.TagsList[]?|select(.Key == \"{}\")|.Value"
+  tags_source: route53domains-list-tags-for-domain
+
+- name: Route53 health checks
+  query: .HealthChecks|length
+  source: route53-list-health-checks
+  tags_query: ".[]|.ResourceTagSet|select(.ResourceType = \"healthcheck\")|.Tags[]|select(.Key = \"{}\")|.Value"
+  tags_source: route53-list-tags-for-resource
+
+- name: Route53 hosted zones
+  query: .HostedZones|length
+  source: route53-list-hosted-zones
+  tags_query: ".[]|.ResourceTagSet|select(.ResourceType = \"hostedzone\")|.Tags[]|select(.Key = \"{}\")|.Value"
+  tags_source: route53-list-tags-for-resource
+
+- name: S3 buckets
+  query: .Buckets|length
+  source: s3-list-buckets
+  tags_query: ".[]|.TagSet[]?|select(.Key == \"{}\")|.Value"
+  tags_source: s3-get-bucket-tagging
+
+- name: SimpleDB domains
+  query: .DomainNames|length
+  source: sdb-list-domains
+  no_tags: true
+
+- name: SNS subscriptions
+  query: .Subscriptions|length
+  source: sns-list-subscriptions
+  no_tags: true
+
+- name: SNS topics
+  query: .Topics|length
+  source: sns-list-topics
+  no_tags: true
+
+- name: SQS queues
+  query: .QueueUrls|length
+  source: sqs-list-queues
+
+- name: WAF web ACLs
+  query: .WebACLs|length
+  source: waf-list-web-acls

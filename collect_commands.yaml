@@ -1,179 +1,19 @@
 # Put this first so the report can be downloaded later
 - Service: iam
   Request: generate-credential-report
-- Service: sts
-  Request: get-caller-identity
-- Service: iam
-  Request: get-account-authorization-details
-- Service: iam
-  # Generate the access reports for all roles, and collect them later
-  Request: generate-service-last-accessed-details
-  Parameters:
-    - Name: Arn
-      Value: iam-get-account-authorization-details.json|.RoleDetailList[]?|.Arn
-- Service: iam
-  # Generate the access reports for all roles, and collect them later
-  Request: generate-service-last-accessed-details
-  Parameters:
-    - Name: Arn
-      Value: iam-get-account-authorization-details.json|.UserDetailList[]?|.Arn
-- Service: iam
-  Request: get-role # Need to get IAM boundaries
-  Parameters:
-  - Name: RoleName
-    Value: iam-get-account-authorization-details.json|.RoleDetailList[]?|.RoleName
-- Service: iam
-  Request: get-user # Needed to get IAM boundaries
-  Parameters:
-  - Name: UserName
-    Value: iam-get-account-authorization-details.json|.UserDetailList[]?|.UserName
-- Service: iam
-  Request: get-account-password-policy
-- Service: iam
-  Request: get-account-summary
-- Service: iam
-  Request: list-account-aliases
 - Service: iam
   Request: get-credential-report
-- Service: iam
-  Request: get-service-last-accessed-details
+
+# ACM certificates
+- Service: acm
+  Request: list-certificates
+- Service: acm
+  Request: list-tags-for-certificate
   Parameters:
-    - Name: JobId
-      Value: iam-generate-service-last-accessed-details/*|.JobId
-  Check:
-    - Name: JobStatus
-      Value: "COMPLETED"
-- Service: iam
-  Request: list-saml-providers
-- Service: iam
-  Request: get-saml-provider
-  Parameters:
-  - Name: SAMLProviderArn
-    Value: iam-list-saml-providers.json|.SAMLProviderList[]?|.Arn
-- Service: iam
-  Request: list-open-id-connect-providers
-- Service: iam
-  Request: get-open-id-connect-provider
-  Parameters:
-  - Name: OpenIDConnectProviderArn
-    Value: iam-list-open-id-connect-providers.json|.OpenIDConnectProviderList[]?|.Arn
-- Service: s3control
-  Request: get-public-access-block
-  Parameters:
-  - Name: AccountId
-    Value: sts-get-caller-identity.json|.Account
-- Service: s3
-  Request: list-buckets
-- Service: s3
-  Request: get-bucket-acl
-  Parameters:
-  - Name: Bucket
-    Value: s3-list-buckets.json|.Buckets[]?|.Name
-- Service: s3
-  Request: get-bucket-policy
-  Parameters:
-  - Name: Bucket
-    Value: s3-list-buckets.json|.Buckets[]?|.Name
-- Service: route53
-  Request: list-hosted-zones
-- Service: route53
-  Request: list-resource-record-sets
-  Parameters:
-  - Name: HostedZoneId
-    Value: route53-list-hosted-zones.json|.HostedZones[]?|[.Id,.Name]
-- Service: route53domains
-  Request: list-domains
-- Service: ec2
-  Request: describe-vpcs
-- Service: ec2
-  Request: describe-availability-zones
-- Service: ec2
-  Request: describe-subnets
-- Service: ec2
-  Request: describe-instances
-- Service: ec2
-  Request: describe-addresses
-- Service: cloudtrail
-  Request: describe-trails
-- Service: cloudtrail
-  Request: get-event-selectors
-  Parameters:
-  - Name: TrailName
-    Value: cloudtrail-describe-trails.json|.trailList[].TrailARN
-- Service: rds
-  Request: describe-db-instances
-- Service: rds
-  Request: describe-db-snapshots
-- Service: rds
-  Request: describe-db-snapshot-attributes
-  Parameters:
-  - Name: DBSnapshotIdentifier
-    Value: rds-describe-db-snapshots.json|.DBSnapshots[]?|.DBSnapshotIdentifier
-- Service: elb
-  Request: describe-load-balancers
-- Service: elb
-  Request: describe-load-balancer-policies
-- Service: elbv2
-  Request: describe-load-balancers
-- Service: redshift
-  Request: describe-clusters
-- Service: sqs
-  Request: list-queues
-- Service: sqs
-  Request: get-queue-attributes
-  Parameters:
-  - Name: QueueUrl
-    Value: sqs-list-queues.json|.QueueUrls[]?
-  - Name: AttributeNames
-    Value: [All]
-- Service: sns
-  Request: list-topics
-- Service: sns
-  Request: get-topic-attributes
-  Parameters:
-  - Name: TopicArn
-    Value: sns-list-topics.json|.Topics[]?|.TopicArn
-- Service: ec2
-  Request: describe-security-groups
-- Service: ec2
-  Request: describe-network-interfaces
-- Service: ec2
-  Request: describe-vpc-peering-connections
-- Service: directconnect
-  Request: describe-connections
-- Service: autoscaling
-  Request: describe-policies
-- Service: autoscaling
-  Request: describe-auto-scaling-groups
-- Service: cloudformation
-  Request: describe-stacks
-- Service: cloudformation
-  Request: get-template
-  Parameters:
-  - Name: StackName
-    Value: cloudformation-describe-stacks.json|.Stacks[]?|.StackName
-- Service: cloudformation
-  Request: describe-stack-resources
-  Parameters:
-  - Name: StackName
-    Value: cloudformation-describe-stacks.json|.Stacks[]?|.StackName
-- Service: cloudfront
-  Request: list-distributions
-- Service: cloudsearch
-  Request: describe-domains
-- Service: cloudsearch
-  Request: describe-service-access-policies
-  Parameters:
-  - Name: DomainName
-    Value: cloudsearch-describe-domains.json|.DomainStatusList[]?|.DomainName
-- Service: cloudwatch
-  Request: describe-alarms
-- Service: config
-  Request: describe-config-rules
-- Service: config
-  Request: describe-configuration-recorders
-- Service: config
-  Request: describe-delivery-channels
+  - Name: CertificateArn
+    Value: acm-list-certificates.json|.CertificateSummaryList[]?|.CertificateArn
+
+# AMIs
 - Service: ec2
   Request: describe-images
   Parameters:
@@ -181,11 +21,151 @@
     Value:
     - "self"
 - Service: ec2
-  Request: describe-network-acls
+  Request: describe-tags
+
+# API Gateway APIs
+- Service: apigateway
+  Request: get-rest-apis
+
+# Athena saved queries
+- Service: athena
+  Request: list-named-queries
+
+# Autoscaling groups
+- Service: autoscaling
+  Request: describe-auto-scaling-groups
+
+# AWS Organization accounts
+- Service: organizations
+  Request: list-accounts
+
+# Batch job definitions
+- Service: batch
+  Request: describe-job-definitions
+
+# CloudFormation stacks
+- Service: cloudformation
+  Request: describe-stacks
+
+# CloudFront distributions
+- Service: cloudfront
+  Request: list-distributions
+- Service: cloudfront
+  Request: list-tags-for-resource
+  Parameters:
+  - Name: Resource
+    Value: cloudfront-list-distributions.json|.DistributionList|.Items[]?|.ARN
+
+# CloudHSM clusters
+- Service: cloudhsmv2
+  Request: describe-clusters
+- Service: cloudhsmv2
+  Request: list-tags
+  Parameters:
+  - Name: ResourceId
+    Value: cloudhsmv2-describe-clusters.json|.Clusters[]?|.ClusterId
+
+# CloudTrail trails
+- Service: cloudtrail
+  Request: describe-trails
+- Service: cloudtrail
+  Request: list-tags
+  Parameters:
+  - Name: ResourceIdList
+    Value: "cloudtrail-describe-trails.json|.trailList[]?|.TrailARN|select(contains(\"{region}\"))"
+    Type: list
+
+# CloudWatch alarms
+- Service: cloudwatch
+  Request: describe-alarms
+
+# CloudWatch dashboards
+- Service: cloudwatch
+  Request: list-dashboards
+
+# CodeBuild projects
+- Service: codebuild
+  Request: list-projects
+- Service: codebuild
+  Request: batch-get-projects
+  Parameters:
+  - Name: names
+    Value: codebuild-list-projects.json|.projects[]|.
+    Type: list
+
+# CodeDeploy applications
+- Service: codedeploy
+  Request: list-applications
+
+# Config rules
+- Service: config
+  Request: describe-config-rules
+
+# Cost usage reports
+- Service: cur
+  Request: describe-report-definitions
+
+# Data pipelines
+- Service: datapipeline
+  Request: list-pipelines
+- Service: datapipeline
+  Request: describe-pipelines
+  Parameters:
+  - Name: pipelineIds
+    Value: datapipeline-list-pipelines.json|.pipelineIdList[]|.id
+    Type: list
+
+# DMS Tasks
+- Service: dms
+  Request: describe-replication-tasks
+- Service: dms
+  Request: list-tags-for-resource
+  Parameters:
+  - Name: ResourceArn
+    Value: dms-describe-replication-tasks.json|.ReplicationTasks[]|.ReplicationTaskArn
+
+# DynamoDB tables
+- Service: dynamodb
+  Request: list-tables
+- Service: dynamodb
+  Request: describe-table
+  Parameters:
+  - Name: tableName
+    Value: dynamodb-list-tables.json|.tableNames[]|.
+
+# EBS volumes
+- Service: ec2
+  Request: describe-volumes
+
+# EC2 instances
+- Service: ec2
+  Request: describe-instances
+
+# EC2 key pairs
+- Service: ec2
+  Request: describe-key-pairs
+
+# EC2 launch configurations
+- Service: autoscaling
+  Request: describe-launch-configurations
+
+# EC2 launch templates
+- Service: ec2
+  Request: describe-launch-templates
+
+# EC2 reserved instances
+- Service: ec2
+  Request: describe-reserved-instances
+
+# EC2 route tables
 - Service: ec2
   Request: describe-route-tables
+
+# EC2 security groups
 - Service: ec2
-  Request: describe-flow-logs
+  Request: describe-security-groups
+
+# EC2 snapshots
 - Service: ec2
   Request: describe-snapshots
   Parameters:
@@ -199,25 +179,55 @@
     Value: ec2-describe-snapshots.json|.Snapshots[]?|.SnapshotId
   - Name: Attribute
     Value: 'createVolumePermission'
-- Service: ec2
-  Request: describe-vpc-endpoint-connections
-- Service: ec2
-  Request: describe-vpn-connections
-- Service: ec2
-  Request: describe-vpn-gateways
+
+# ECR repositories
 - Service: ecr
   Request: describe-repositories
+- Service: ecr
+  Request: list-tags-for-resource
+  Parameters:
+  - Name: resourceArn
+    Value: ecr-describe-repositories.json|.repositories[]|.repositoryArn
+
+# ECR policies
 - Service: ecr
   Request: get-repository-policy
   Parameters:
   - Name: repositoryName
-    Value: ecr-describe-repositories.json|.repositories[]|.repositoryName
-- Service: elasticache
-  Request: describe-cache-clusters
-- Service: elasticbeanstalk
-  Request: describe-applications
+    Value: ecr-describe-repositories.json|.repositories[]?|.repositoryName
+
+# ECS clusters
+- Service: ecs
+  Request: list-clusters
+- Service: ecs
+  Request: list-tags-for-resource
+  Parameters:
+  - Name: resourceArn
+    Value: ecs-list-clusters.json|.clusterArns[]|.
+
+# ECS task definitions
+- Service: ecs
+  Request: list-task-definitions
+
+# EFS file systems
 - Service: efs
   Request: describe-file-systems
+- Service: efs
+  Request: describe-tags
+  Parameters:
+  - Name: FileSystemId
+    Value: efs-describe-file-systems.json|.FileSystems[]|.FileSystemId
+
+# Elasticache clusters
+- Service: elasticache
+  Request: describe-cache-clusters
+- Service: elasticache
+  Request: list-tags-for-resource
+  Parameters:
+  - Name: ResourceName
+    Value: "elasticache-describe-cache-clusters.json|.CacheClusters[]|.CacheClusterId|\"arn:aws:elasticache:{region}:{account}:cluster:\\(.)\""
+
+# ElasticSearch
 - Service: es
   Request: list-domain-names
 - Service: es
@@ -225,17 +235,56 @@
   Parameters:
   - Name: DomainName
     Value: es-list-domain-names.json|.DomainNames[]?|.DomainName
-- Service: events
-  Request: describe-event-bus
-- Service: events
-  Request: list-rules
+
+# ELBs
+- Service: elb
+  Request: describe-load-balancers
+- Service: elb
+  Request: describe-tags
+  Parameters:
+  - Name: LoadBalancerNames
+    Value: elb-describe-load-balancers.json|.LoadBalancerDescriptions[]|.LoadBalancerName
+    Type: list
+
+# ELBs v2
+- Service: elbv2
+  Request: describe-load-balancers
+- Service: elbv2
+  Request: describe-tags
+  Parameters:
+  - Name: ResourceArns
+    Value: elbv2-describe-load-balancers.json|.LoadBalancers[]|.LoadBalancerArn
+    Type: list
+
+# ELB v2 target groups
+- Service: elbv2
+  Request: describe-target-groups
+- Service: elbv2
+  Request: describe-tags
+  Parameters:
+  - Name: ResourceArns
+    Value: elbv2-describe-target-groups.json|.TargetGroups[]|.TargetGroupArn
+    Type: list
+
+# EMR clusters
+- Service: emr
+  Request: list-clusters
+- Service: emr
+  Request: describe-cluster
+  Parameters:
+  - Name: ClusterId
+    Value: emr-list-clusters.json|.Clusters[]|.Id
+
+# Firehose delivery streams
 - Service: firehose
   Request: list-delivery-streams
 - Service: firehose
-  Request: describe-delivery-stream
+  Request: list-tags-for-delivery-stream
   Parameters:
   - Name: DeliveryStreamName
-    Value: firehose-list-delivery-streams.json|.DeliveryStreamNames[]?
+    Value: firehose-list-delivery-streams.json|.DeliveryStreamNames[]|.
+
+# Glacier
 - Service: glacier
   Request: list-vaults
   Parameters:
@@ -248,18 +297,36 @@
     Value: glacier-list-vaults.json|.VaultList[]?|.VaultName
   - Name: accountId
     Value: "-"
+
+# Glue databases
+- Service: glue
+  Request: get-databases
+
+# GuardDuty
+- Service: guardduty
+  Request: list-detectors
+- Service: guardduty
+  Request: get-detector
+  Parameters:
+  - Name: DetectorId
+    Value: guardduty-list-detectors.json|.DetectorIds[]?|.
+
+# IAM groups, policies, roles, and users
+- Service: iam
+  Request: get-account-authorization-details
+
+# Kinesis streams
+- Service: kinesis
+  Request: list-streams
+- Service: kinesis
+  Request: list-tags-for-stream
+  Parameters:
+  - Name: StreamName
+    Value: kinesis-list-streams.json|.StreamNames[]|.
+
+# KMS keys
 - Service: kms
   Request: list-keys
-- Service: kms
-  Request: list-grants
-  Parameters:
-  - Name: KeyId
-    Value: kms-list-keys.json|.Keys[]?|.KeyId
-- Service: kms
-  Request: list-key-policies
-  Parameters:
-  - Name: KeyId
-    Value: kms-list-keys.json|.Keys[]?|.KeyId
 - Service: kms
   Request: get-key-policy
   Parameters:
@@ -268,10 +335,12 @@
   - Name: PolicyName
     Value: 'default'
 - Service: kms
-  Request: get-key-rotation-status
+  Request: list-resource-tags
   Parameters:
   - Name: KeyId
-    Value: kms-list-keys.json|.Keys[]?|.KeyId
+    Value: kms-list-keys.json|.Keys[]|.KeyId
+
+# Lambda functions
 - Service: lambda
   Request: list-functions
 - Service: lambda
@@ -279,37 +348,340 @@
   Parameters:
   - Name: FunctionName
     Value: lambda-list-functions.json|.Functions[]?|.FunctionName
-- Service: logs
-  Request: describe-destinations
-- Service: logs
-  Request: describe-log-groups
-- Service: logs
-  Request: describe-resource-policies
-- Service: lightsail
-  Request: get-instances
-- Service: lightsail
-  Request: get-load-balancers
-- Service: apigateway
-  Request: get-rest-apis
-- Service: apigateway
-  Request: get-resources
+- Service: lambda
+  Request: list-tags
   Parameters:
-  - Name: restApiId
-    Value: apigateway-get-rest-apis.json|.items[]?|.id
-- Service: apigateway
-  Request: get-deployments
+  - Name: Resource
+    Value: lambda-list-functions.json|.Functions[]|.FunctionArn
+
+# Machine Learning datasources
+- Service: machinelearning
+  Request: describe-data-sources
+- Service: machinelearning
+  Request: describe-tags
   Parameters:
-  - Name: restApiId
-    Value: apigateway-get-rest-apis.json|.items[]?|.id
-- Service: apigateway
-  Request: get-stages
+  - Name: ResourceId
+    Value: machinelearning-describe-data-sources.json|.Results[]|.DataSourceId
+  - Name: ResourceType
+    Value: DataSource
+
+# Machine Learning evaluations
+- Service: machinelearning
+  Request: describe-evaluations
+- Service: machinelearning
+  Request: describe-tags
   Parameters:
-  - Name: restApiId
-    Value: apigateway-get-rest-apis.json|.items[]?|.id
-- Service: guardduty
-  Request: list-detectors
-- Service: guardduty
-  Request: get-detector
+  - Name: ResourceId
+    Value: machinelearning-describe-evaluations.json|.Results[]|.EvaluationId
+  - Name: ResourceType
+    Value: Evaluation
+
+# Machine Learning models
+- Service: machinelearning
+  Request: describe-ml-models
+- Service: machinelearning
+  Request: describe-tags
   Parameters:
-  - Name: DetectorId
-    Value: guardduty-list-detectors.json|.DetectorIds[]?|.
+  - Name: ResourceId
+    Value: machinelearning-describe-ml-models.json|.Results[]|.MLModelId
+  - Name: ResourceType
+    Value: MLModel
+
+# RDS instances
+- Service: rds
+  Request: describe-db-instances
+- Service: rds
+  Request: describe-db-snapshots
+- Service: rds
+  Request: describe-db-snapshot-attributes
+  Parameters:
+  - Name: DBSnapshotIdentifier
+    Value: rds-describe-db-snapshots.json|.DBSnapshots[]?|.DBSnapshotIdentifier
+- Service: rds
+  Request: list-tags-for-resource
+  Parameters:
+  - Name: ResourceName
+    Value: rds-describe-db-instances.json|.DBInstances[]?|.DBInstanceArn
+
+# Route53 domains
+- Service: route53domains
+  Request: list-domains
+- Service: route53domains
+  Request: list-tags-for-domain
+  Parameters:
+  - Name: DomainName
+    Value: route53domains-list-domains.json|.Domains[]?|.DomainName
+
+# Route53 health checks
+- Service: route53
+  Request: list-health-checks
+- Service: route53
+  Request: list-tags-for-resource
+  Parameters:
+  - Name: ResourceId
+    Value: route53-list-health-checks.json|.HealthChecks[]?|.Id
+  - Name: ResourceType
+    Value: healthcheck
+
+# Route53 hosted zones
+- Service: route53
+  Request: list-hosted-zones
+- Service: route53
+  Request: list-tags-for-resource
+  Parameters:
+  - Name: ResourceId
+    Value: route53-list-hosted-zones.json|.HostedZones[]?|.Id
+  - Name: ResourceType
+    Value: hostedzone
+
+# S3 buckets
+- Service: s3
+  Request: list-buckets
+- Service: s3
+  Request: get-bucket-policy
+  Parameters:
+  - Name: Bucket
+    Value: s3-list-buckets.json|.Buckets[]?|.Name
+- Service: s3
+  Request: get-bucket-acl
+  Parameters:
+  - Name: Bucket
+    Value: s3-list-buckets.json|.Buckets[]?|.Name
+- Service: sts
+  Request: get-caller-identity
+- Service: s3control
+  Request: get-public-access-block
+  Parameters:
+  - Name: AccountId
+    Value: sts-get-caller-identity.json|.Account
+- Service: s3
+  Request: get-bucket-tagging
+  Parameters:
+  - Name: Bucket
+    Value: s3-list-buckets.json|.Buckets[]?|.Name
+
+# SimpleDB domains
+- Service: sdb
+  Request: list-domains
+
+# SNS subscriptions
+- Service: sns
+  Request: list-subscriptions
+
+# SNS topics
+- Service: sns
+  Request: list-topics
+- Service: sns
+  Request: get-topic-attributes
+  Parameters:
+  - Name: TopicArn
+    Value: sns-list-topics.json|.Topics[]?|.TopicArn
+
+# SQS queues
+- Service: sqs
+  Request: list-queues
+- Service: sqs
+  Request: get-queue-attributes
+  Parameters:
+  - Name: QueueUrl
+    Value: sqs-list-queues.json|.QueueUrls[]?
+  - Name: AttributeNames
+    Value: [All]
+
+# WAF web ACLs
+- Service: waf-regional
+  Request: list-web-acls
+
+
+#- Service: sts
+#  Request: get-caller-identity
+#- Service: iam
+#  # Generate the access reports for all roles, and collect them later
+#  Request: generate-service-last-accessed-details
+#  Parameters:
+#    - Name: Arn
+#      Value: iam-get-account-authorization-details.json|.RoleDetailList[]?|.Arn
+#- Service: iam
+#  # Generate the access reports for all roles, and collect them later
+#  Request: generate-service-last-accessed-details
+#  Parameters:
+#    - Name: Arn
+#      Value: iam-get-account-authorization-details.json|.UserDetailList[]?|.Arn
+#- Service: iam
+#  Request: get-role # Need to get IAM boundaries
+#  Parameters:
+#  - Name: RoleName
+#    Value: iam-get-account-authorization-details.json|.RoleDetailList[]?|.RoleName
+#- Service: iam
+#  Request: get-user # Needed to get IAM boundaries
+#  Parameters:
+#  - Name: UserName
+#    Value: iam-get-account-authorization-details.json|.UserDetailList[]?|.UserName
+#- Service: iam
+#  Request: get-account-password-policy
+#- Service: iam
+#  Request: get-account-summary
+#- Service: iam
+#  Request: list-account-aliases
+#- Service: iam
+#  Request: get-service-last-accessed-details
+#  Parameters:
+#    - Name: JobId
+#      Value: iam-generate-service-last-accessed-details/*|.JobId
+#  Check:
+#    - Name: JobStatus
+#      Value: "COMPLETED"
+#- Service: iam
+#  Request: list-saml-providers
+#- Service: iam
+#  Request: get-saml-provider
+#  Parameters:
+#  - Name: SAMLProviderArn
+#    Value: iam-list-saml-providers.json|.SAMLProviderList[]?|.Arn
+#- Service: iam
+#  Request: list-open-id-connect-providers
+#- Service: iam
+#  Request: get-open-id-connect-provider
+#  Parameters:
+#  - Name: OpenIDConnectProviderArn
+#    Value: iam-list-open-id-connect-providers.json|.OpenIDConnectProviderList[]?|.Arn
+#- Service: route53
+#  Request: list-resource-record-sets
+#  Parameters:
+#  - Name: HostedZoneId
+#    Value: route53-list-hosted-zones.json|.HostedZones[]?|[.Id,.Name]
+#- Service: ec2
+#  Request: describe-vpcs
+#- Service: ec2
+#  Request: describe-availability-zones
+#- Service: ec2
+#  Request: describe-subnets
+#- Service: ec2
+#  Request: describe-addresses
+#- Service: cloudtrail
+#  Request: get-event-selectors
+#  Parameters:
+#  - Name: TrailName
+#    Value: cloudtrail-describe-trails.json|.trailList[].TrailARN
+#- Service: elb
+#  Request: describe-load-balancer-policies
+#- Service: elbv2
+#  Request: describe-load-balancers
+#- Service: redshift
+#  Request: describe-clusters
+#- Service: ec2
+#  Request: describe-security-groups
+#- Service: ec2
+#  Request: describe-network-interfaces
+#- Service: ec2
+#  Request: describe-vpc-peering-connections
+#- Service: directconnect
+#  Request: describe-connections
+#- Service: autoscaling
+#  Request: describe-policies
+#- Service: autoscaling
+#  Request: describe-auto-scaling-groups
+#- Service: cloudformation
+#  Request: describe-stacks
+#- Service: cloudformation
+#  Request: get-template
+#  Parameters:
+#  - Name: StackName
+#    Value: cloudformation-describe-stacks.json|.Stacks[]?|.StackName
+#- Service: cloudformation
+#  Request: describe-stack-resources
+#  Parameters:
+#  - Name: StackName
+#    Value: cloudformation-describe-stacks.json|.Stacks[]?|.StackName
+#- Service: cloudfront
+#  Request: list-distributions
+#- Service: cloudsearch
+#  Request: describe-domains
+#- Service: cloudsearch
+#  Request: describe-service-access-policies
+#  Parameters:
+#  - Name: DomainName
+#    Value: cloudsearch-describe-domains.json|.DomainStatusList[]?|.DomainName
+#- Service: cloudwatch
+#  Request: describe-alarms
+#- Service: config
+#  Request: describe-config-rules
+#- Service: config
+#  Request: describe-configuration-recorders
+#- Service: config
+#  Request: describe-delivery-channels
+#- Service: ec2
+#  Request: describe-images
+#  Parameters:
+#  - Name: Owners
+#    Value:
+#    - "self"
+#- Service: ec2
+#  Request: describe-network-acls
+#- Service: ec2
+#  Request: describe-flow-logs
+#- Service: ec2
+#  Request: describe-vpc-endpoint-connections
+#- Service: ec2
+#  Request: describe-vpn-connections
+#- Service: ec2
+#  Request: describe-vpn-gateways
+#- Service: elasticache
+#  Request: describe-cache-clusters
+#- Service: elasticbeanstalk
+#  Request: describe-applications
+#- Service: efs
+#  Request: describe-file-systems
+#- Service: events
+#  Request: describe-event-bus
+#- Service: events
+#  Request: list-rules
+#- Service: firehose
+#  Request: list-delivery-streams
+#- Service: firehose
+#  Request: describe-delivery-stream
+#  Parameters:
+#  - Name: DeliveryStreamName
+#    Value: firehose-list-delivery-streams.json|.DeliveryStreamNames[]?
+#- Service: kms
+#  Request: list-grants
+#  Parameters:
+#  - Name: KeyId
+#    Value: kms-list-keys.json|.Keys[]?|.KeyId
+#- Service: kms
+#  Request: get-key-rotation-status
+#  Parameters:
+#  - Name: KeyId
+#    Value: kms-list-keys.json|.Keys[]?|.KeyId
+#- Service: logs
+#  Request: describe-destinations
+#- Service: logs
+#  Request: describe-log-groups
+#- Service: logs
+#  Request: describe-resource-policies
+#- Service: lightsail
+#  Request: get-instances
+#- Service: lightsail
+#  Request: get-load-balancers
+#- Service: apigateway
+#  Request: get-rest-apis
+#- Service: apigateway
+#  Request: get-resources
+#  Parameters:
+#  - Name: restApiId
+#    Value: apigateway-get-rest-apis.json|.items[]?|.id
+#- Service: apigateway
+#  Request: get-deployments
+#  Parameters:
+#  - Name: restApiId
+#    Value: apigateway-get-rest-apis.json|.items[]?|.id
+#- Service: apigateway
+#  Request: get-stages
+#  Parameters:
+#  - Name: restApiId
+#    Value: apigateway-get-rest-apis.json|.items[]?|.id
+#- Service: kms
+#  Request: list-key-policies
+#  Parameters:
+#  - Name: KeyId
+#    Value: kms-list-keys.json|.Keys[]?|.KeyId
