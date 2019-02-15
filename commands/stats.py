@@ -51,6 +51,7 @@ def output_image(accounts, account_stats, resource_names, output_image_file):
     fig.savefig(output_image_file, format='png', bbox_inches='tight', dpi=200)
     print('Image saved to {}'.format(output_image_file), file=sys.stderr)
 
+
 def count_tags(region, resource, tag, aws_data):
     if 'tags_query' in resource:
         query = resource['tags_query'].format(tag)
@@ -59,7 +60,7 @@ def count_tags(region, resource, tag, aws_data):
         else:
             aws_data = slurp_parameter_files(region, resource['tags_source'])
     else:
-        query = resource['query'].replace('|length', '[]|.Tags[]|select(.Key == "{}")|.Value'.format(tag))
+        query = resource['query'].replace('|length', '[]|.Tags[]?|select(.Key == "{}")|.Value'.format(tag))
 
     tags = pyjq.all(query, aws_data)
     return Counter(tags)

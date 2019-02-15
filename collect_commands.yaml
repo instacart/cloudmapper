@@ -269,6 +269,14 @@
 # EMR clusters
 - Service: emr
   Request: list-clusters
+  Parameters:
+  - Name: ClusterStates
+    Value:
+    - STARTING
+    - BOOTSTRAPPING
+    - RUNNING
+    - WAITING
+    - TERMINATING
 - Service: emr
   Request: describe-cluster
   Parameters:
@@ -401,7 +409,7 @@
   Request: list-tags-for-resource
   Parameters:
   - Name: ResourceName
-    Value: rds-describe-db-instances.json|.DBInstances[]?|.DBInstanceArn
+    Value: "rds-describe-db-instances.json|.DBInstances[]|select(.DBInstanceIdentifier|contains(\"staging\")|not)|.DBInstanceArn"
 
 # Route53 domains
 - Service: route53domains
