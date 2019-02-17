@@ -56,7 +56,7 @@ def count_tags(region, resource, tag, aws_data):
     if 'tags_query' in resource:
         query = resource['tags_query'].format(tag)
         if ".json" in resource['tags_source']:
-            aws_data = query_aws(region.account, resource['tags_source'], region)
+            aws_data = query_aws(region.account, resource['tags_source'].replace(".json", ""), region)
         else:
             aws_data = slurp_parameter_files(region, resource['tags_source'])
     else:

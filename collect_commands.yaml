@@ -180,6 +180,10 @@
   - Name: Attribute
     Value: 'createVolumePermission'
 
+# EC2 spot fleet requests
+- Service: ec2
+  Request: describe-spot-fleet-requests
+
 # ECR repositories
 - Service: ecr
   Request: describe-repositories
@@ -225,7 +229,7 @@
   Request: list-tags-for-resource
   Parameters:
   - Name: ResourceName
-    Value: "elasticache-describe-cache-clusters.json|.CacheClusters[]|.CacheClusterId|\"arn:aws:elasticache:{region}:{account}:cluster:\\(.)\""
+    Value: "elasticache-describe-cache-clusters.json|.CacheClusters[]|select(.CacheClusterId|contains(\"stg\")|not)|select(.CacheClusterId|contains(\"staging\")|not)|.CacheClusterId|\"arn:aws:elasticache:{region}:{account}:cluster:\\(.)\""
 
 # ElasticSearch
 - Service: es

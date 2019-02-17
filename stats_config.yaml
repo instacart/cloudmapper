@@ -102,10 +102,7 @@
 - name: DynamoDB tables
   query: .TableNames|length
   source: dynamodb-list-tables
-
-- name: EBS volumes
-  query: .Volumes|length
-  source: ec2-describe-volumes
+  no_tags: true
 
 - name: EC2 instances
   query: .Reservations[].Instances|length
@@ -133,6 +130,12 @@
   query: .SecurityGroups|length
   source: ec2-describe-security-groups
 
+- name: EC2 spot fleet launch specifications
+  query: "[.SpotFleetRequestConfigs[]|.SpotFleetRequestConfig|.LaunchSpecifications]|flatten|length"
+  source: ec2-describe-spot-fleet-requests
+  tags_query: "[.SpotFleetRequestConfigs[]|.SpotFleetRequestConfig|.LaunchSpecifications]|flatten|.[]|.TagSpecifications[]|.Tags[]|select(.Key == \"Terraform\")|.Value"
+  tags_source: ec2-describe-spot-fleet-requests.json
+
 - name: ECR repositories
   query: .repositories|length
   source: ecr-describe-repositories
@@ -141,7 +144,7 @@
 
 - name: ECS clusters
   query: .clusterArns|length
-  source: ecs-describe-clusters
+  source: ecs-list-clusters
   tags_query: ".[]|.tags[]?|select(.Key == \"{}\")|.Value"
   tags_source: ecs-list-tags-for-resource
 
@@ -157,7 +160,7 @@
   tags_source: efs-describe-tags
 
 - name: Elasticache clusters
-  query: .CacheClusters|length
+  query: "[.CacheClusters[]|select(.CacheClusterId|contains(\"stg\")|not)|select(.CacheClusterId|contains(\"staging\")|not)]|length"
   source: elasticache-describe-cache-clusters
   tags_query: ".[]|.TagList[]?|select(.Key == \"{}\")|.Value"
   tags_source: elasticache-list-tags-for-resource
