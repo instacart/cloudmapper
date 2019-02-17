@@ -160,7 +160,7 @@
   tags_source: efs-describe-tags
 
 - name: Elasticache clusters
-  query: "[.CacheClusters[]|select(.CacheClusterId|contains(\"stg\")|not)|select(.CacheClusterId|contains(\"staging\")|not)]|length"
+  query: "[.CacheClusters[]|select(.CacheClusterId|contains(\"stg\")|not)|select(.CacheClusterId|contains(\"staging\")|not)|.ReplicationGroupId // .CacheClusterId]|unique|length"
   source: elasticache-describe-cache-clusters
   tags_query: ".[]|.TagList[]?|select(.Key == \"{}\")|.Value"
   tags_source: elasticache-list-tags-for-resource
